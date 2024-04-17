@@ -7,16 +7,29 @@ AS empleadosMas2Cambios;
 SELECT COUNT(*) AS cantEncargados FROM dept_manager;
 
 -- 16 Encargado con mayor tiempo en la empresa. Código, nombre completo y puesto.
-SELECT emp_no AS codEmpleado, CONCAT(first_name,' ', last_name) AS nombre , hire_date
-FROM dept_manager D JOIN employees E USING (emp_no) WHERE
-TIMESTAMPDIFF(DAY,E.hire_date, NOW()) = (SELECT MIN(TIMESTAMPDIFF(DAY,hire_date, NOW())) FROM employees);
+CREATE VIEW fechaMaximaEncargado AS SELECT emp_no, MAX(to_date) AS maximaFecha, MIN(from_date) AS minimaFecha FROM dept_manager 
+WHERE to_date = (SELECT MAX(to_date) FROM dept_manager) GROUP BY emp_no;
 
+SELECT emp_no as codEmpleado, CONCAT(first_name,' ', last_name) AS nombre, hire_date AS fechaContratacion, dept_name as puesto
+FROM dept_manager DM
+JOIN employees E USING(emp_no)
+JOIN departments D USING (dept_no)
+JOIN fechaMaximaEncargado F USING (emp_no)
+WHERE DM.from_date = F.minimaFecha AND DM.to_date = F.maximaFecha 
+AND E.emp_no = (SELECT emp_no FROM  dept_manager 
+WHERE to_date = (SELECT MAX(to_date) FROM dept_manager) AND from_date = (SELECT MIN(from_date) FROM dept_manager WHERE to_date = (SELECT MAX(to_date) FROM dept_manager)));
 
 -- 17 Empleados que hayan estado en más de un departamento. Indica sus nombres completos.
+SELECT CONCAT(first_name,' ', last_name) AS nombre, COUNT(dept_no) AS cantidad FROM dept_emp JOIN employees USING (emp_no) GROUP BY emp_no HAVING cantidad>1;
 
 -- 18 Encargado que mayor salario ha tenido. Indica el código de empleado, nombre completo, salario y departamento.
+SELECT E.emp_no AS codEmpleado, CONCAT(first_name,' ', last_name) AS nombre, salary AS salarioMax, D.dept_no AS departamento 
+FROM salaries S JOIN employees E USING (emp_no) JOIN dept_emp USING (emp_no) JOIN departments D USING (dept_no) WHERE salary = (SELECT MAX(salary) FROM salaries);
 
 -- 19 Empleados que fueron jefes y en la actualidad no lo son. Indica el código del empleado, nombre completo y tiempo que estuvo como jefe.
+SELECT emp_no, CONCAT(first_name,' ', last_name) AS nombre, TIMESTAMPDIFF(YEAR, from_date, to_date) AS duracionAños FROM dept_manager JOIN employees USING (emp_no) WHERE to_date<NOW();
+SELECT emp_no, CONCAT(first_name,' ', last_name) AS nombre, TIMESTAMPDIFF(MONTH, from_date, to_date) AS duracionMeses FROM dept_manager JOIN employees USING (emp_no) WHERE to_date<NOW();
+SELECT emp_no, CONCAT(first_name,' ', last_name) AS nombre, TIMESTAMPDIFF(DAY, from_date, to_date) AS duracionDias FROM dept_manager JOIN employees USING (emp_no) WHERE to_date<NOW();
 
 -- 20 Regalos de Navidad. El presidente de la empresa va a realizar un regalo de navidad, dependiendo de la antigüedad del empleado. 
 -- Si lleva 30 años o más le va a regalar un “jamón de pata negra” valorado en 90€ y si lleva menos de 30 años un “podómetro digital” valorado en 30€. 
