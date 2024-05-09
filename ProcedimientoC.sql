@@ -11,7 +11,7 @@ BEGIN
     FROM libro
     WHERE book_id = libro_id;
 
-    IF ROW_COUNT() = 1 THEN
+    IF ROW_COUNT() = 1 THEN -- ROW_COUNT() FILAS AFECTADAS
         SET resultado = 'La venta del libro se ha insertado correctamente.';
     ELSE
         SET resultado = CONCAT('Error: Ocurrió un problema al insertar la venta del libro con el id ', libro_id);
